@@ -14,10 +14,16 @@ ILoggerRespository类中维护着LevelMap、PluginMap、Rendermap。
 ILoggerRespository中维护并存储着这些对象的集合（LevelMap、PluginMap、Rendermap），但它并不负责创建这些对象，而是把创建的工作委托给了XmlHierarchyConfigurator。
 	XmlHierarchyConfigurator负责解析对Log4net的Xml（节点）配置。
 	
-3、Hierarchy（Logger仓库）
+3、Hierarchy
 这里存放着通过配置文件创建的所有Logger。由于Logger们是有父子关系的，因此Hierarchy通过继承树来存放所有的Logger。
 	Hierarchy类不直接创建ILogger对象，而是通过ILoggerFactory对象来创建ILogger对象。
 	在Hierarchy类中保存ILoggerFactory的一个默认实现：DefaultLoggerFactory。
+
+2019-04-26修改上面的说法：
+Hierarchy继承了LoggerRepositorySkeleton, IBasicRepositoryConfigurator, IXmlRepositoryConfigurator
+	（a）LoggerRepositorySkeleton又继承自ILoggerRepository, Appender.IFlushable，所以是一个Repository
+	（b）IBasicRepositoryConfigurator, IXmlRepositoryConfigurator是两个读取xml配置的接口
+	（c）Hierarchy存储着log4net所有的logger，这些logger是从创建Logger的工厂Hierarchy.LoggerFactory中创建的.这些logger被创建出来后存储在Hierarchy.m_ht中，m_ht是一个hashtable
 	
 二、获取Logger的流程
 用户使用log4net的时候，调用LogManager.GetLogger()方法即可得到一个logger（ILog的实例对象）然后开始记录。
