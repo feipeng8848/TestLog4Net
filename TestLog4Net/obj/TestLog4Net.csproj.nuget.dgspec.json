@@ -1,0 +1,66 @@
+{
+  "format": 1,
+  "restore": {
+    "D:\\开发软件\\TestLog4Net\\TestLog4Net\\TestLog4Net.csproj": {}
+  },
+  "projects": {
+    "D:\\开发软件\\TestLog4Net\\TestLog4Net\\TestLog4Net.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\开发软件\\TestLog4Net\\TestLog4Net\\TestLog4Net.csproj",
+        "projectName": "TestLog4Net",
+        "projectPath": "D:\\开发软件\\TestLog4Net\\TestLog4Net\\TestLog4Net.csproj",
+        "packagesPath": "C:\\Users\\k\\.nuget\\packages\\",
+        "outputPath": "D:\\开发软件\\TestLog4Net\\TestLog4Net\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\k\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.2"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.2": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.2": {
+          "dependencies": {
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.2.0, )",
+              "autoReferenced": true
+            },
+            "System.Configuration.ConfigurationManager": {
+              "target": "Package",
+              "version": "[4.5.0, )"
+            },
+            "log4net": {
+              "target": "Package",
+              "version": "[2.0.8, )"
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    }
+  }
+}
