@@ -85,26 +85,26 @@ Logger -> Appender -> Filter -> Layout -> Render -> LoggingEvent
 方法：
 ILogger Exists(string name);								//检查名为name的Logger是否存在，如果存在就返回这Logger，如果不存在就返回null
 ILogger[] GetCurrentLoggers();								//获取当前已经定义的所有的Logger
-log4net.Appender.IAppender[] GetAppenders();					//获取当前已经定义的所有Appender
+log4net.Appender.IAppender[] GetAppenders();				//获取当前已经定义的所有Appender
 ILogger GetLogger(string name);								//获取名为name的Logger
 void Log(LoggingEvent logEvent);
-void ResetConfiguration();								//重置当前Repository的配置为默认值
-void Shutdown();										//关闭当前Repository
+void ResetConfiguration();									//重置当前Repository的配置为默认值
+void Shutdown();											//关闭当前Repository
 
 属性：
-ICollection ConfigurationMessages { get; set; }					//在最近的配置过程中捕获的内部消息的集合。
+ICollection ConfigurationMessages { get; set; }				//在最近的配置过程中捕获的内部消息的集合。
 bool Configured { get; set; }								//一个Flag，表明当前Repository有没有被配置
-LevelMap LevelMap { get; }								//LevelMap类是一个集合，Hashtable类型
+LevelMap LevelMap { get; }									//LevelMap类是一个集合，Hashtable类型
 PluginMap PluginMap { get; }								//PluginMap类是一个集合，Hashtable类型
 RendererMap RendererMap { get; }							//RendererMap类是一个集合，Hashtable类型
-PropertiesDictionary Properties { get; }						//Util中定义的一个类
-string Name { get; set; }								//Repository的名称
+PropertiesDictionary Properties { get; }					//Util中定义的一个类
+string Name { get; set; }									//Repository的名称
 Level Threshold { get; set; }								//此Repository中所有事件的阈值
 
 事件：
 event LoggerRepositoryConfigurationChangedEventHandler ConfigurationChanged;			//配置改变	
 event LoggerRepositoryConfigurationResetEventHandler ConfigurationReset;				//配置重置
-event LoggerRepositoryShutdownEventHandler ShutdownEvent;						//关闭Repository
+event LoggerRepositoryShutdownEventHandler ShutdownEvent;								//关闭Repository
 
 
 
