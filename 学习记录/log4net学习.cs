@@ -43,8 +43,10 @@ IRepositorySelector就是负责缓存和管理ILoggerRepository对象的类，�
 实际上，ILoggerRepository对象也是从别处获取的ILogger对象，真正存储ILogger对象的是Hierarchy（Logger仓库）。
 
 流程：LogManager -> LoggerManager -> IRepositorySelector -> ILoggerRepository -> Hierarchy
-
 以上就是LogManager.GetLogger()方法的具体逻辑。
+
+Hierarchy有一个默认的Factory叫DefaultLoggerFactory，调用DefaultLoggerFactory.CreateLogger(string name)会new出一个Logger。此时new的Logger只有name一个属性。
+
 
 三、日志的写入流程
 Logger -> Appender -> Filter -> Layout -> Render -> LoggingEvent
@@ -110,6 +112,10 @@ event LoggerRepositoryShutdownEventHandler ShutdownEvent;								//关闭Reposit
 void Configure(System.Xml.XmlElement element);				//配置Repository
 															//Hierarchy中实现了该方法，实际上是用XmlHierarchyConfigurator类的对象做了实现
 															//但XmlHierarchyConfigurator类并没有继承IXmlRepositoryConfigurator接口
+
+3、log4net.Repository.Hierarchy.ILoggerFactory
+方法：
+Logger CreateLogger(ILoggerRepository repository, string name);		//创建Logger，参数repository是为了提供Logger的Level	
 
 
 
