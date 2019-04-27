@@ -46,6 +46,7 @@ IRepositorySelector就是负责缓存和管理ILoggerRepository对象的类，�
 以上就是LogManager.GetLogger()方法的具体逻辑。
 
 Hierarchy有一个默认的Factory叫DefaultLoggerFactory，调用DefaultLoggerFactory.CreateLogger(string name)会new出一个Logger。此时new的Logger只有name一个属性。
+刚new出的Logger是如何配置的？Appender是在调用的时候才创建的。
 
 
 三、日志的写入流程
