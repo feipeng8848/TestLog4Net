@@ -196,6 +196,15 @@ protected void ParseChildrenOfLoggerElement(XmlElement catElement, Logger log, b
 	}
 }
 
+4、创建好的logger如何获得appender
+IAppender appender = FindAppenderByReference(currentElement);
+appender = ParseAppender(element);
+//appender的typeName都是从配置文件中读到的，每一种类型对应Appender目录下的某一个appender实体类。
+//创建的时候动态创建
+IAppender appender = (IAppender)Activator.CreateInstance(SystemInfo.GetTypeFromString(typeName, true, true));
+
+5、值得研究的log4net.Repository.Hierarchy  : protected void SetParameter(XmlElement element, object target)函数
+先获取类型，然后得到类型的属性，再然后从配置文件中搜寻属性，最后赋值
 
 三、日志的写入流程
 Logger -> Appender -> Filter -> Layout -> Render -> LoggingEvent
