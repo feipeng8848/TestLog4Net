@@ -2,9 +2,7 @@
 1、ILogger（日志记录者）
 在Log4Net架构中，对日志的记录是以日志实体为单位的。它记录日志的最低级别（高于此基本的消息都可以记录）
 ILogger拥有自己的Appender集合，负责输出日志。
-		Appender拥有自己的
-				过滤器Filter和
-				布局Layout。
+Appender拥有自己的  过滤器Filter  和  布局Layout。
 	
 2、ILoggerRespository（Logger仓库）
 ILoggerRespository接口中维护着LevelMap、PluginMap、Rendermap。
