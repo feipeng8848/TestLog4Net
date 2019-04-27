@@ -45,8 +45,165 @@ IRepositorySelector就是负责缓存和管理ILoggerRepository对象的类，�
 流程：LogManager -> LoggerManager -> IRepositorySelector -> ILoggerRepository -> Hierarchy
 以上就是LogManager.GetLogger()方法的具体逻辑。
 
+那么，Hierarchy中的Logger是从哪里来的？
+先看log4net使用流程：
+ILoggerRepository repository = LogManager.CreateRepository("NETCoreRepository");
+XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));            
+LogDebug = LogManager.GetLogger(repository.Name, "logDebug");
+LogInfo = LogManager.GetLogger(repository.Name, "loginfo");
+LogError = LogManager.GetLogger(repository.Name, "logError");
+现在我们关心的是第二行代码：
+XmlConfigurator.Configure(repository, new FileInfo("log4net.config")); 
+执行这行代码就会去读取配置文件log4net.config,这个配置文件中会配置n多logger等，XmlConfigurator读到后会创建这些logger然后存储到Hierarchy.m_ht中。
+XmlConfigurator.Configure方法的执行流程（精简）：
+static public ICollection Configure(ILoggerRepository repository, FileInfo configFile)
+{
+	ArrayList configurationMessages = new ArrayList();
+	using (new LogLog.LogReceivedAdapter(configurationMessages))
+	{
+		InternalConfigure(repository, configFile);
+	}
+	return configurationMessages;
+}
+
+static private void InternalConfigure(ILoggerRepository repository, FileInfo configFile)
+{
+	FileStream fs = null;
+	fs = configFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+	InternalConfigure(repository, fs);
+}
+
+static private void InternalConfigure(ILoggerRepository repository, Stream configStream)
+{
+	XmlDocument doc = new XmlDocument();
+	XmlReaderSettings settings = new XmlReaderSettings();
+	XmlReader xmlReader = XmlReader.Create(configStream, settings);
+	doc.Load(xmlReader);
+	XmlNodeList configNodeList = doc.GetElementsByTagName("log4net");
+	InternalConfigureFromXml(repository, configNodeList[0] as XmlElement);
+}
+
+static private void InternalConfigureFromXml(ILoggerRepository repository, XmlElement element) 
+{
+	IXmlRepositoryConfigurator configurableRepository = repository as IXmlRepositoryConfigurator;
+	XmlDocument newDoc = new XmlDocument();
+	XmlElement newElement = (XmlElement)newDoc.AppendChild(newDoc.ImportNode(element, true));
+	configurableRepository.Configure(newElement);	
+}
+
+下面调用了IXmlRepositoryConfigurator.Configure(XmlElement element)方法，该接口由参数repository转过来的
+而repository.Configure()的真正实现是在Hierarchy类中(且只有这一个实现)
+故上面函数最后一行代码实际上是调用的是Hierarchy.Configure(XmlElement element)
+
+void IXmlRepositoryConfigurator.Configure(System.Xml.XmlElement element)
+{
+	XmlRepositoryConfigure(element);
+}
+
+protected void XmlRepositoryConfigure(System.Xml.XmlElement element)
+{
+	ArrayList configurationMessages = new ArrayList();
+	using (new LogLog.LogReceivedAdapter(configurationMessages))
+	{
+		XmlHierarchyConfigurator config = new XmlHierarchyConfigurator(this);
+		config.Configure(element);
+	}
+	Configured = true;
+	ConfigurationMessages = configurationMessages;
+	OnConfigurationChanged(new ConfigurationChangedEventArgs(configurationMessages));
+}
+
+然后再去XmlHierarchyConfigurator类的Configure方法,期间用到一些宏定义我在注释中给出了
+下面的方法才是真正去解析配置文件中的logger、appender等我们用户自定义的配置项
+
+public void Configure(XmlElement element) 
+{
+	foreach (XmlNode currentNode in element.ChildNodes)
+	{
+		XmlElement currentElement = (XmlElement)currentNode;
+		if (currentElement.LocalName == LOGGER_TAG)//LOGGER_TAG = "logger"
+		{
+			ParseLogger(currentElement);
+		} 
+		else if (currentElement.LocalName == CATEGORY_TAG)//CATEGORY_TAG = "category"
+		{
+			// TODO: deprecated use of category
+			ParseLogger(currentElement);
+		} 
+		else if (currentElement.LocalName == ROOT_TAG)//ROOT_TAG = "root"
+		{
+			ParseRoot(currentElement);
+		} 
+		else if (currentElement.LocalName == RENDERER_TAG)//RENDERER_TAG = “renderer”
+		{
+			ParseRenderer(currentElement);
+		}
+		else if (currentElement.LocalName == APPENDER_TAG)//APPENDER_TAG = "appender"
+		{
+			// We ignore appenders in this pass. They will
+			// be found and loaded if they are referenced.
+		}
+		else
+		{
+			// Read the param tags and set properties on the hierarchy
+			SetParameter(currentElement, m_hierarchy);//m_hierarchy 就是当前上下文Hierarchy类的实例。
+		}
+	}
+}
+
+//解析一个logger配置
+protected void ParseLogger(XmlElement loggerElement) 
+{
+	string loggerName = loggerElement.GetAttribute(NAME_ATTR);	//NAME_ATTR = “name”
+	Logger log = m_hierarchy.GetLogger(loggerName) as Logger;	//创建logger
+	lock(log) 
+	{
+		bool additivity = OptionConverter.ToBoolean(loggerElement.GetAttribute(ADDITIVITY_ATTR), true);
+		log.Additivity = additivity;
+		ParseChildrenOfLoggerElement(loggerElement, log, false);
+	}
+}
+
+//为logger配置appender等
+protected void ParseChildrenOfLoggerElement(XmlElement catElement, Logger log, bool isRoot) 
+{
+	log.RemoveAllAppenders();
+	foreach (XmlNode currentNode in catElement.ChildNodes)
+	{
+		XmlElement currentElement = (XmlElement) currentNode;
+		if (currentElement.LocalName == APPENDER_REF_TAG)//APPENDER_REF_TAG = “appender-ref”
+		{
+			IAppender appender = FindAppenderByReference(currentElement);
+			string refName =  currentElement.GetAttribute(REF_ATTR);//REF_ATTR = “ref”
+			log.AddAppender(appender);
+		} 
+		else if (currentElement.LocalName == LEVEL_TAG || currentElement.LocalName == PRIORITY_TAG) //LEVEL_TAG = “level”  PRIORITY_TAG = “priority”
+		{
+			ParseLevel(currentElement, log, isRoot);	
+		} 
+		else
+		{
+			SetParameter(currentElement, log);
+		}
+	}
+
+	IOptionHandler optionHandler = log as IOptionHandler;
+	if (optionHandler != null) 
+	{
+		optionHandler.ActivateOptions();
+	}
+}
+
+
 Hierarchy有一个默认的Factory叫DefaultLoggerFactory，调用DefaultLoggerFactory.CreateLogger(string name)会new出一个Logger。此时new的Logger只有name一个属性。
-刚new出的Logger是如何配置的？Appender是在调用的时候才创建的。
+
+刚new出的Logger是如何配置的？
+刚new出的logger是没有任何配置的，new出一个logger只是调用log4net.Repository.Hierarchy.DefaultLoggerFactory.CreateLogger()方法，
+该方法实际上是new了一个log4net.Repository.Hierarchy.Logger的实例，new出来之后仅仅为其赋值了name字段。
+
+
+
+Appender是在调用的时候才创建的。
 
 
 三、日志的写入流程
