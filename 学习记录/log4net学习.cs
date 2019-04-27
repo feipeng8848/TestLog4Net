@@ -6,20 +6,19 @@ ILogger拥有自己的Appender集合，负责输出日志。
 				过滤器Filter和
 				布局Layout。
 	
-2、ILoggerRespository（管理中心：接收工作、分析工作、确定由哪个Logger干活、去Logger仓库找到Logger）
-ILoggerRespository类就像是Log4net的骨架，他支撑着整个Log4net的结构并管理着Log4net的各个部件。
-ILoggerRespository类中维护着LevelMap、PluginMap、Rendermap。
+2、ILoggerRespository（Logger仓库）
+ILoggerRespository接口中维护着LevelMap、PluginMap、Rendermap。
 	LevelMap、PluginMap分别是Level,Plugin对象以其名称为键的集合；
 	Rendermap是IObjectRender以其类型为键的集合。
 ILoggerRespository中维护并存储着这些对象的集合（LevelMap、PluginMap、Rendermap），但它并不负责创建这些对象，而是把创建的工作委托给了XmlHierarchyConfigurator。
 	XmlHierarchyConfigurator负责解析对Log4net的Xml（节点）配置。
-	
-3、Hierarchy
-这里存放着通过配置文件创建的所有Logger。由于Logger们是有父子关系的，因此Hierarchy通过继承树来存放所有的Logger。
-	Hierarchy类不直接创建ILogger对象，而是通过ILoggerFactory对象来创建ILogger对象。
-	在Hierarchy类中保存ILoggerFactory的一个默认实现：DefaultLoggerFactory。
+	从ILogRepository中可以获取到Logger，但是该接口并没有定义存储Logger的变量（包括LevelMap、PluginMap、Rendermap这些，也都没有定义实际用于存储的变量）
+	实际上Logger是在实现了ILoggerResposity的实体类中存储的。
 
-2019-04-26修改上面的说法：
+3、LoggerRepositorySkeleton
+LoggerRepositorySkeleton是一个抽象类，继承自ILoggerRepositry，实现了某些方法。创建了用于存储LevelMap、PluginMap、Rendermap的变量。
+
+4、Hierarchy
 Hierarchy继承了LoggerRepositorySkeleton, IBasicRepositoryConfigurator, IXmlRepositoryConfigurator
 	（a）LoggerRepositorySkeleton又继承自ILoggerRepository, Appender.IFlushable，所以是一个Repository
 	（b）IBasicRepositoryConfigurator, IXmlRepositoryConfigurator是两个读取xml配置的接口
@@ -105,6 +104,12 @@ Level Threshold { get; set; }								//此Repository中所有事件的阈值
 event LoggerRepositoryConfigurationChangedEventHandler ConfigurationChanged;			//配置改变	
 event LoggerRepositoryConfigurationResetEventHandler ConfigurationReset;				//配置重置
 event LoggerRepositoryShutdownEventHandler ShutdownEvent;								//关闭Repository
+
+2、log4net.Repository.IXmlRepositoryConfigurator
+方法：
+void Configure(System.Xml.XmlElement element);				//配置Repository
+															//Hierarchy中实现了该方法，实际上是用XmlHierarchyConfigurator类的对象做了实现
+															//但XmlHierarchyConfigurator类并没有继承IXmlRepositoryConfigurator接口
 
 
 
