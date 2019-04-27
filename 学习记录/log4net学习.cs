@@ -155,7 +155,11 @@ public void Configure(XmlElement element)
 protected void ParseLogger(XmlElement loggerElement) 
 {
 	string loggerName = loggerElement.GetAttribute(NAME_ATTR);	//NAME_ATTR = “name”
-	Logger log = m_hierarchy.GetLogger(loggerName) as Logger;	//创建logger
+	//创建logger。
+	//Hierarchy有一个logger工厂，默认Factory是DefaultLoggerFactory
+	//默认Hierarchy.GetLogger()就是调用DefaultLoggerFactory.CreateLogger(string name)
+	//这会new出一个Logger。此时new的Logger只有name一个属性。
+	Logger log = m_hierarchy.GetLogger(loggerName) as Logger;	
 	lock(log) 
 	{
 		bool additivity = OptionConverter.ToBoolean(loggerElement.GetAttribute(ADDITIVITY_ATTR), true);
@@ -193,17 +197,6 @@ protected void ParseChildrenOfLoggerElement(XmlElement catElement, Logger log, b
 		optionHandler.ActivateOptions();
 	}
 }
-
-
-Hierarchy有一个默认的Factory叫DefaultLoggerFactory，调用DefaultLoggerFactory.CreateLogger(string name)会new出一个Logger。此时new的Logger只有name一个属性。
-
-刚new出的Logger是如何配置的？
-刚new出的logger是没有任何配置的，new出一个logger只是调用log4net.Repository.Hierarchy.DefaultLoggerFactory.CreateLogger()方法，
-该方法实际上是new了一个log4net.Repository.Hierarchy.Logger的实例，new出来之后仅仅为其赋值了name字段。
-
-
-
-Appender是在调用的时候才创建的。
 
 
 三、日志的写入流程
